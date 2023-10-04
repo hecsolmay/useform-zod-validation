@@ -8,14 +8,27 @@ import Input from './input'
 import cn from '@/utils/cn'
 
 export default function Form () {
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<SignUpSchema>({
+  const { register, watch, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<SignUpSchema>({
     resolver: zodResolver(signUpSchema)
   })
 
+  const files = watch('files')
+  const images = Array.from(files ?? []).map((file) => ({
+    ...file,
+    src: URL.createObjectURL(file)
+  }))
+
   const onSubmit = async (data: SignUpSchema) => {
-    await new Promise((resolve) => setTimeout(resolve, 5000))
+    await new Promise((resolve) => setTimeout(resolve, 500))
     console.log(data)
-    alert('Form submitted successfully')
+    const formData = new FormData()
+    const { files, ...rest } = data
+
+    Array.from(files).forEach((file) => {
+      formData.append('files', file)
+    })
+
+    formData.append('user', JSON.stringify(rest))
     reset()
   }
 
@@ -51,6 +64,13 @@ export default function Form () {
           placeholder="password"
           error={errors.confirmPassword?.message}
         />
+      </div>
+      <div className="mb-6">
+        <input multiple type="file" {...register('files')} />
+        {errors.files?.message !== undefined && <p className="text-red-600">{errors.files?.message}</p>}
+        {images.map((file) => (
+          <img className='w-20 h-20' key={file.name} src={file.src} />
+        ))}
       </div>
 
       <div className="flex items-start mb-6">
